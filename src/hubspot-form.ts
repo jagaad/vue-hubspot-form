@@ -1,6 +1,6 @@
 import { ref, h, defineComponent, onMounted, PropType } from "vue";
 
-// This will load script only once, event if form is rendered multiple times
+// This will load script only once, even if form is rendered multiple times
 const loadingScript = loadScript<HubSpot>("//js-eu1.hsforms.net/forms/shell.js", 'hbspt')
 
 type HubSpot = {
