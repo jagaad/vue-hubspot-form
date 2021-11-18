@@ -1,0 +1,42 @@
+{
+  "name": "@jagaad/vue-hubspot-form",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jagaad/vue-hubspot-form.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "serve": "vite preview",
+    "types": "tsc --declaration --emitDeclarationOnly src/hubspot-form.ts --outFile dist/hubspot-form",
+    "prepublishOnly": "npm run build && npm run types",
+    "test": "echo \"Error: no test specified\" && exit 0"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/hubspot-form.umd.js",
+  "module": "./dist/hubspot-form.es.js",
+  "types": "./dist/hubspot-form.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/hubspot-form.es.js",
+      "require": "./dist/hubspot-form.umd.js"
+    }
+  },
+  "dependencies": {
+    "vue": "^3.2.16"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.7",
+    "@vitejs/plugin-vue": "^1.9.3",
+    "np": "^7.5.0",
+    "typescript": "^4.4.3",
+    "vite": "^2.6.4",
+    "vue-tsc": "^0.3.0"
+  }
+}
