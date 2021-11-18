@@ -1,5 +1,22 @@
 import { ref, h, defineComponent, onMounted, PropType } from "vue";
 
+// This will load script only once, event if form is rendered multiple times
+const loadingScript = loadScript<HubSpot>("//js-eu1.hsforms.net/forms/shell.js", 'hbspt')
+
+type HubSpot = {
+  forms: {
+    // https://legacydocs.hubspot.com/docs/methods/forms/advanced_form_options
+    create: (options: {
+      region: string,
+      portalId: string,
+      formId: string,
+      target: string,
+      /** `onFormReady` requires jQuery */
+      onFormReady?: () => {}
+    }) => { id: string }
+  }
+}
+
 export default defineComponent({
   props: {
     region: {
@@ -25,17 +42,19 @@ export default defineComponent({
     onMounted(async () => {
       if (!divRef.value) return;
 
+      const hbspt = await loadingScript.catch(() => { })
+      if (!hbspt) return;
+
       const id = `id-${Math.random().toString().slice(2)}`;
       divRef.value.id = id;
 
-      (window as any).hbspt.forms.create({
+      hbspt.forms.create({
         region: props.region,
         portalId: props.portalId,
         formId: props.formId,
         target: `#${id}`,
       });
 
-      /** using options.onFormReady requires jQuery */
       const iframe = await waitQuerySelector(divRef.value, "iframe");
       const html = iframe.contentDocument?.documentElement;
       if (!html) return;
@@ -81,4 +100,15 @@ function waitQuerySelectorAll(element: Element, selectors: string) {
       resolve(found);
     });
   });
+}
+
+function loadScript<Type>(src: string, umdName: string) {
+  return new Promise<Type>((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = src
+    script.defer = true
+    script.onload = () => resolve((window as any)[umdName] as Type)
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
 }
