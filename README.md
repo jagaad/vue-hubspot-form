@@ -8,17 +8,27 @@ A Vue wrapper for HubSpot Forms
 npm install @jagaad/vue-hubspot-form
 ```
 
-````vue
+```vue
+<script setup>
+import HubspotForm from "@jagaad/vue-hubspot-form";
+</script>
 <template>
-  <!-- using callback onReady -->
   <HubspotForm
-    :onReady="onReady"
+    @ready="onReady"
     :options="options"
     :fallback="fallback"
     :error="error"
-  />
+  ></HubspotForm>
+</template>
+```
 
-  <!-- using emit onReady -->
+All examples make use partially of code blocks defined below
+
+<details>
+<summary>Example 1: using `onReady` as emit</summary>
+
+```vue
+<template>
   <HubspotForm
     @ready="onReady"
     :options="options"
@@ -26,34 +36,122 @@ npm install @jagaad/vue-hubspot-form
     :error="error"
   />
 </template>
+```
 
-<script setup lang="ts">
-import { defineComponent } from "vue";
-import HubspotForm, { Payload, CreateOptions } from "@jagaad/vue-hubspot-form";
+</details>
+
+<details>
+<summary>Example 2: using `onReady` as callback</summary>
+
+```vue
+<template>
+  <HubspotForm
+    :onReady="onReady"
+    :options="options"
+    :fallback="fallback"
+    :error="error"
+  />
+</template>
+```
+
+</details>
+
+<details>
+<summary>Example 3: inject CSS via options</summary>
+
+```tsx
+import { CreateOptions } from "@jagaad/vue-hubspot-form";
+
+// these values are fake, add your own
+const options: CreateOptions = {
+  // ...
+  // Read the official docs for more info
+  cssRequired: `.hubspot-link__container { display: none }`,
+  // ...
+};
+```
+
+</details>
+
+<details>
+<summary>Example 4: inject CSS in `onReady` callback</summary>
+
+```tsx
+import { Payload } from "@jagaad/vue-hubspot-form";
+
+function onReady({ iframeDocument: doc }: Payload) {
+  const element = doc.createElement("style");
+  const styles = `.hubspot-link__container { display: none }`;
+  element.appendChild(doc.createTextNode(styles));
+  doc.head.appendChild(element);
+}
+```
+
+</details>
+
+</details>
+
+<details>
+<summary>Example 5: inject CSS using JSS in `onReady` callback</summary>
+
+```tsx
+import jss, { Styles } from "jss";
+import { Payload } from "./hubspot-form";
+
+function onReady({ iframeDocument }: Payload) {
+  addClasses(iframeDocument, {
+    ".hubspot-link__container": {
+      display: "none",
+    },
+  });
+}
+
+// This helper function will add JSS classes to classes from iframe
+function addClasses<Name extends string | number | symbol>(
+  doc: Document,
+  styles: Partial<Styles<Name, any, undefined>>
+) {
+  const element = doc.createElement("style");
+  doc.head.appendChild(element);
+  const styleSheet = jss.createStyleSheet(styles, { element }).attach();
+  Object.entries(styles).forEach(([currentClass]) => {
+    const newClass = styleSheet.classes[currentClass as Name];
+    doc.querySelector(currentClass)?.classList.add(newClass);
+  });
+}
+```
+
+</details>
+
+<details>
+<summary>Code Blocks</summary>
+
+**Options:**
+
+```tsx
+import { CreateOptions } from "@jagaad/vue-hubspot-form";
 
 // these values are fake, add your own
 const options: CreateOptions = {
   region: "eu1",
   portalId: "83991272",
   formId: "25f1e214-1236-45c3-810m-d8dk31736c72",
-  cssRequired: `.hubspot-link__container { display: none }`,
   // ...
 };
+```
 
-/**
- * `onReady` is supoprted using callbacks or using emits
- *
- * using emit
- * ```
- * @ready="onReady"
- * ```
- *
- * using callback, can be async, loading will show until resolved
- * ```
- * :onReady="onReady"
- * ```
- */
+**On Ready callback:**
+
+```tsx
+import { Payload } from "@jagaad/vue-hubspot-form";
+
 const onReady = (payload: Payload) => console.log(payload);
+```
+
+**Fallback Components:**
+
+```tsx
+import { defineComponent } from "vue";
 
 // Loading Component
 const fallback = defineComponent({
@@ -63,8 +161,9 @@ const fallback = defineComponent({
 const error = defineComponent({
   /* ... */
 });
-</script>
-````
+```
+
+</details>
 
 ## Contributing
 

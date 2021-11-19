@@ -1,7 +1,7 @@
 import { ref, h, defineComponent, PropType, Component, watchPostEffect, onErrorCaptured } from "vue";
 
 export type Payload = { hbspt: HubSpot, form: Form, iframe: HTMLIFrameElement, iframeDocument: Document }
-export type Form = { id: string }
+export type Form = { id: string, onReady: (cb: () => void) => void }
 export type HubSpot = { forms: { create: (options: _CreateOptions) => Form } }
 
 /**
@@ -87,23 +87,27 @@ export default defineComponent({
 
       const form = hbspt.forms.create({ ...props.options, target: `#${id}` });
 
-      const iframe = await waitQuerySelector(divRef.value, "iframe");
-      const iframeDocument = iframe.contentDocument;
-      const html = iframeDocument?.documentElement
+      form.onReady(async () => {
+        if (!divRef.value) return
 
-      if (!html) return error()
+        const iframe = divRef.value.querySelector<HTMLIFrameElement>(':scope iframe') ?? undefined;
+        const iframeDocument = iframe?.contentDocument ?? undefined;
+        const html = iframeDocument?.documentElement
 
-      const payload = { hbspt, form, iframe, iframeDocument }
+        if (!html || !iframe) return error()
 
-      if (typeof props.onReady === 'function') {
-        await props.onReady(payload)
-      } else {
-        emit('ready', payload)
-      }
+        const payload = { hbspt, form, iframe, iframeDocument }
 
-      isLoading.value = false
-      isError.value = false
-      divRef.value.hidden = false
+        if (typeof props.onReady === 'function') {
+          await props.onReady(payload)
+        } else {
+          emit('ready', payload)
+        }
+
+        isLoading.value = false
+        isError.value = false
+        divRef.value.hidden = false
+      })
     });
 
     return () => [
@@ -113,17 +117,6 @@ export default defineComponent({
     ].filter(Boolean)
   }
 })
-
-function waitQuerySelector<K extends keyof HTMLElementTagNameMap>(element: Element, selectors: K): Promise<HTMLElementTagNameMap[K]> {
-  return new Promise((resolve) => {
-    const interval = setInterval(() => {
-      const found = element.querySelector(selectors)
-      if (!found) return;
-      clearInterval(interval);
-      resolve(found);
-    });
-  });
-}
 
 function loadScript<Type>(src: string, umdName: string) {
   return new Promise<Type>((resolve, reject) => {
