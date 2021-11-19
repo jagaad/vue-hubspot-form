@@ -10,8 +10,18 @@ npm install @jagaad/vue-hubspot-form
 
 ```vue
 <script setup lang="ts">
+import { defineComponent } from "vue";
 import HubspotForm from "@jagaad/vue-hubspot-form";
-const styles: Record<string, Partial<CSSStyleDeclaration>> = {
+
+const LoadingComponent = defineComponent({
+  /* ... */
+});
+const ErrorComponent = defineComponent({
+  /* ... */
+});
+
+type Styles = Record<string, Partial<CSSStyleDeclaration>>;
+const styles: Styles = {
   // Hide HubSpot brand
   ".hubspot-link__container": {
     display: "none",
@@ -26,6 +36,8 @@ const styles: Record<string, Partial<CSSStyleDeclaration>> = {
     portalId="83991272"
     formId="25f1e214-1236-45c3-810m-d8dk31736c72"
     :styles="styles"
+    :fallback="LoadingComponent"
+    :error="ErrorComponent"
   />
 </template>
 ```

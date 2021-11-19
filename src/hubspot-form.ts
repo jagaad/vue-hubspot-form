@@ -1,4 +1,4 @@
-import { ref, h, defineComponent, onMounted, PropType } from "vue";
+import { ref, h, defineComponent, PropType, Component, watchPostEffect, onErrorCaptured } from "vue";
 
 // This will load script only once, even if form is rendered multiple times
 const loadingScript = loadScript<HubSpot>("//js-eu1.hsforms.net/forms/shell.js", 'hbspt')
@@ -11,11 +11,13 @@ type HubSpot = {
       portalId: string,
       formId: string,
       target: string,
-      /** `onFormReady` requires jQuery */
-      onFormReady?: () => {}
     }) => { id: string }
   }
 }
+
+const noopComponent = defineComponent({
+  render: () => h('div', { hidden: true })
+})
 
 export default defineComponent({
   props: {
@@ -34,16 +36,39 @@ export default defineComponent({
     styles: {
       type: Object as PropType<Record<string, Partial<CSSStyleDeclaration>>>,
       default: () => ({})
+    },
+    fallback: {
+      type: Object as PropType<Component>,
+      default: noopComponent
+    },
+    error: {
+      type: Object as PropType<Component>,
+      default: noopComponent
     }
   },
   setup(props) {
+    const isLoading = ref(true)
+    const isError = ref(false)
     const divRef = ref<HTMLDivElement>();
 
-    onMounted(async () => {
-      if (!divRef.value) return;
+    function error() {
+      if (divRef.value) divRef.value.hidden = true
+      isLoading.value = false
+      isError.value = true
+    }
 
-      const hbspt = await loadingScript.catch(() => { })
-      if (!hbspt) return;
+    onErrorCaptured(error)
+
+    watchPostEffect(async () => {
+      if (!divRef.value) return error()
+
+      divRef.value.hidden = true
+      isLoading.value = true
+      isError.value = false
+
+      const hbspt = await loadingScript.catch(error)
+
+      if (!hbspt) return error()
 
       const id = `id-${Math.random().toString().slice(2)}`;
       divRef.value.id = id;
@@ -57,7 +82,8 @@ export default defineComponent({
 
       const iframe = await waitQuerySelector(divRef.value, "iframe");
       const html = iframe.contentDocument?.documentElement;
-      if (!html) return;
+
+      if (!html) return error()
 
       for (const [selectors, styles] of Object.entries(props.styles)) {
         const elements = await waitQuerySelectorAll<HTMLElement>(html, selectors)
@@ -68,9 +94,16 @@ export default defineComponent({
         }))
       }
 
+      isLoading.value = false
+      isError.value = false
+      divRef.value.hidden = false
     });
 
-    return () => h('div', { ref: divRef })
+    return () => [
+      h('div', { ref: divRef, hidden: true }),
+      isLoading.value && h(props.fallback),
+      isError.value && h(props.error),
+    ].filter(Boolean)
   }
 })
 
