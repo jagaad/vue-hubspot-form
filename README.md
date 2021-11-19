@@ -8,39 +8,63 @@ A Vue wrapper for HubSpot Forms
 npm install @jagaad/vue-hubspot-form
 ```
 
-```vue
-<script setup lang="ts">
-import { defineComponent } from "vue";
-import HubspotForm from "@jagaad/vue-hubspot-form";
-
-const LoadingComponent = defineComponent({
-  /* ... */
-});
-const ErrorComponent = defineComponent({
-  /* ... */
-});
-
-type Styles = Record<string, Partial<CSSStyleDeclaration>>;
-const styles: Styles = {
-  // Hide HubSpot brand
-  ".hubspot-link__container": {
-    display: "none",
-  },
-};
-</script>
-
+````vue
 <template>
-  <!-- these values are fake, add your own -->
+  <!-- using callback onReady -->
   <HubspotForm
-    region="eu1"
-    portalId="83991272"
-    formId="25f1e214-1236-45c3-810m-d8dk31736c72"
-    :styles="styles"
-    :fallback="LoadingComponent"
-    :error="ErrorComponent"
+    :onReady="onReady"
+    :options="options"
+    :fallback="fallback"
+    :error="error"
+  />
+
+  <!-- using emit onReady -->
+  <HubspotForm
+    @ready="onReady"
+    :options="options"
+    :fallback="fallback"
+    :error="error"
   />
 </template>
-```
+
+<script setup lang="ts">
+import { defineComponent } from "vue";
+import HubspotForm, { Payload, CreateOptions } from "@jagaad/vue-hubspot-form";
+
+// these values are fake, add your own
+const options: CreateOptions = {
+  region: "eu1",
+  portalId: "83991272",
+  formId: "25f1e214-1236-45c3-810m-d8dk31736c72",
+  cssRequired: `.hubspot-link__container { display: none }`,
+  // ...
+};
+
+/**
+ * `onReady` is supoprted using callbacks or using emits
+ *
+ * using emit
+ * ```
+ * @ready="onReady"
+ * ```
+ *
+ * using callback, can be async, loading will show until resolved
+ * ```
+ * :onReady="onReady"
+ * ```
+ */
+const onReady = (payload: Payload) => console.log(payload);
+
+// Loading Component
+const fallback = defineComponent({
+  /* ... */
+});
+// Error Component
+const error = defineComponent({
+  /* ... */
+});
+</script>
+````
 
 ## Contributing
 

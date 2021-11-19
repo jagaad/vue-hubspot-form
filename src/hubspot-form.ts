@@ -1,52 +1,64 @@
 import { ref, h, defineComponent, PropType, Component, watchPostEffect, onErrorCaptured } from "vue";
 
-// This will load script only once, even if form is rendered multiple times
-const loadingScript = loadScript<HubSpot>("//js-eu1.hsforms.net/forms/shell.js", 'hbspt')
+export type Payload = { hbspt: HubSpot, form: Form, iframe: HTMLIFrameElement, iframeDocument: Document }
+export type Form = { id: string }
+export type HubSpot = { forms: { create: (options: _CreateOptions) => Form } }
 
-type HubSpot = {
-  forms: {
-    // https://legacydocs.hubspot.com/docs/methods/forms/advanced_form_options
-    create: (options: {
-      region: string,
-      portalId: string,
-      formId: string,
-      target: string,
-    }) => { id: string }
-  }
+/**
+ * All possible options for creating HubSpot form
+ * `target` is added by wrapper
+ * https://legacydocs.hubspot.com/docs/methods/forms/advanced_form_options
+ */
+export type CreateOptions = Omit<_CreateOptions, 'target'>
+type _CreateOptions = {
+  portalId: string
+  formId: string,
+  region: string,
+  target: string,
+  redirectUrl?: string
+  inlineMessage?: string
+  pageId?: string
+  cssRequired?: string
+  cssClass?: string
+  submitButtonClass?: string
+  errorClass?: string
+  errorMessageClass?: string
+  groupErrors?: boolean
+  locale?: string
+  translations?: Record<string, unknown>
+  manuallyBlockedEmailDomain?: string[]
+  formInstanceId?: string
+  onBeforeFormInit?: (...args: unknown[]) => unknown
+  // Works only if you have jQuery on page
+  onFormReady?: (...args: unknown[]) => unknown
+  onFormSubmit?: (...args: unknown[]) => unknown
+  onFormSubmitted?: (...args: unknown[]) => unknown
 }
 
-const noopComponent = defineComponent({
-  render: () => h('div', { hidden: true })
-})
+// This will load script only once, even if form is rendered multiple times
+const loadingScript = loadScript<HubSpot>("//js-eu1.hsforms.net/forms/shell.js", 'hbspt')
+const noopComponent = defineComponent({ render: () => h('div', { hidden: true }) })
 
 export default defineComponent({
+  emits: { ready: (payload: Payload) => payload },
   props: {
-    region: {
-      type: String,
-      required: true,
+    onReady: {
+      type: Function as PropType<(payload: Payload) => void | Promise<void>>,
     },
-    portalId: {
-      type: String,
-      required: true,
-    },
-    formId: {
-      type: String,
-      required: true,
-    },
-    styles: {
-      type: Object as PropType<Record<string, Partial<CSSStyleDeclaration>>>,
+    options: {
+      type: Object as PropType<CreateOptions>,
       default: () => ({})
     },
     fallback: {
       type: Object as PropType<Component>,
-      default: noopComponent
+      default: () => noopComponent
     },
     error: {
       type: Object as PropType<Component>,
-      default: noopComponent
-    }
+      default: () => noopComponent
+    },
   },
-  setup(props) {
+  setup(props, { emit }) {
     const isLoading = ref(true)
     const isError = ref(false)
     const divRef = ref<HTMLDivElement>();
@@ -73,25 +85,20 @@ export default defineComponent({
       const id = `id-${Math.random().toString().slice(2)}`;
       divRef.value.id = id;
 
-      hbspt.forms.create({
-        region: props.region,
-        portalId: props.portalId,
-        formId: props.formId,
-        target: `#${id}`,
-      });
+      const form = hbspt.forms.create({ ...props.options, target: `#${id}` });
 
       const iframe = await waitQuerySelector(divRef.value, "iframe");
-      const html = iframe.contentDocument?.documentElement;
+      const iframeDocument = iframe.contentDocument;
+      const html = iframeDocument?.documentElement
 
       if (!html) return error()
 
-      for (const [selectors, styles] of Object.entries(props.styles)) {
-        const elements = await waitQuerySelectorAll<HTMLElement>(html, selectors)
-        const styleEntries = Object.entries(styles) as Array<[string, string]>
-        elements.forEach(element => styleEntries.forEach(([property, value]) => {
-          // @ts-ignore
-          element.style[property] = value
-        }))
+      const payload = { hbspt, form, iframe, iframeDocument }
+
+      if (typeof props.onReady === 'function') {
+        await props.onReady(payload)
+      } else {
+        emit('ready', payload)
       }
 
       isLoading.value = false
@@ -107,28 +114,11 @@ export default defineComponent({
   }
 })
 
-function waitQuerySelector<K extends keyof HTMLElementTagNameMap>(element: Element, selectors: K): Promise<HTMLElementTagNameMap[K]>;
-function waitQuerySelector<K extends keyof SVGElementTagNameMap>(element: Element, selectors: K): Promise<SVGElementTagNameMap[K]>;
-function waitQuerySelector<E extends Element = Element>(element: Element, selectors: string): Promise<E>;
-function waitQuerySelector(element: Element, selectors: string) {
+function waitQuerySelector<K extends keyof HTMLElementTagNameMap>(element: Element, selectors: K): Promise<HTMLElementTagNameMap[K]> {
   return new Promise((resolve) => {
     const interval = setInterval(() => {
       const found = element.querySelector(selectors)
       if (!found) return;
-      clearInterval(interval);
-      resolve(found);
-    });
-  });
-}
-
-function waitQuerySelectorAll<K extends keyof HTMLElementTagNameMap>(element: Element, selectors: K): Promise<NodeListOf<HTMLElementTagNameMap[K]>>;
-function waitQuerySelectorAll<K extends keyof SVGElementTagNameMap>(element: Element, selectors: K): Promise<NodeListOf<SVGElementTagNameMap[K]>>;
-function waitQuerySelectorAll<E extends Element = Element>(element: Element, selectors: string): Promise<NodeListOf<E>>;
-function waitQuerySelectorAll(element: Element, selectors: string) {
-  return new Promise((resolve) => {
-    const interval = setInterval(() => {
-      const found = element.querySelectorAll(selectors)
-      if (found.length === 0) return;
       clearInterval(interval);
       resolve(found);
     });
