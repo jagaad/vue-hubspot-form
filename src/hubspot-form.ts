@@ -87,6 +87,8 @@ export default defineComponent({
 
       const form = hbspt.forms.create({ ...props.options, target: `#${id}` });
 
+      if (!form) return error()
+
       form.onReady(async () => {
         if (!divRef.value) return
 
