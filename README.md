@@ -114,9 +114,10 @@ function addClasses<Name extends string | number | symbol>(
   const element = doc.createElement("style");
   doc.head.appendChild(element);
   const styleSheet = jss.createStyleSheet(styles, { element }).attach();
-  Object.entries(styles).forEach(([currentClass]) => {
-    const newClass = styleSheet.classes[currentClass as Name];
-    doc.querySelector(currentClass)?.classList.add(newClass);
+  Object.entries(styles).forEach(([currentSelector]) => {
+    const newClass = styleSheet.classes[currentSelector as Name];
+    const found = doc.querySelectorAll(currentSelector);
+    found.forEach(e => e.classList.add(newClass));
   });
 }
 ```
