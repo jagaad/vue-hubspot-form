@@ -1,4 +1,4 @@
-import { ref, h, defineComponent, PropType, Component, watchPostEffect, onErrorCaptured } from "vue";
+import { ref, h, defineComponent, PropType, Component, watchPostEffect, onErrorCaptured } from "vue-demi";
 
 export type Payload = { hbspt: HubSpot, form: Form, iframe: HTMLIFrameElement, iframeDocument: Document }
 export type Form = { id: string, onReady: (cb: () => void) => void }
