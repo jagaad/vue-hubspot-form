@@ -112,11 +112,15 @@ export default defineComponent({
       })
     });
 
-    return () => [
-      h('div', { ref: divRef, hidden: true }),
-      isLoading.value && h(props.fallback),
-      isError.value && h(props.error),
-    ].filter(Boolean)
+    return () => {
+      const children = [
+        h('div', { ref: divRef, hidden: true }),
+        isLoading.value && h(props.fallback),
+        isError.value && h(props.error),
+      ].filter(Boolean)
+
+      return h('div', children)
+    }
   }
 })
 
