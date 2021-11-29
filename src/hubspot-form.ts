@@ -1,4 +1,5 @@
-import { ref, h as vueH, defineComponent, PropType, Component, watchPostEffect, onErrorCaptured, isVue2 } from "vue-demi";
+import { ref, defineComponent, PropType, Component, watchPostEffect, onErrorCaptured } from "vue-demi";
+import { h } from "./h";
 
 export type Payload = { hbspt: HubSpot, form: Form, iframe: HTMLIFrameElement, iframeDocument: Document }
 export type Form = { id: string, onReady: (cb: () => void) => void }
@@ -38,10 +39,7 @@ type _CreateOptions = {
 // This will load script only once, even if form is rendered multiple times
 const loadingScript = loadScript<HubSpot>("//js-eu1.hsforms.net/forms/shell.js", 'hbspt')
 const noopComponent = defineComponent({
-  render: (renderH: typeof vueH) => {
-    const h = isVue2 ? renderH : vueH
-    return h('div', { hidden: true })
-  }
+  render: () => h('div', { props: { hidden: true } })
 })
 
 export default defineComponent({
@@ -117,15 +115,14 @@ export default defineComponent({
       })
     });
 
-    return (renderH: typeof vueH) => {
-      const h = isVue2 ? renderH : vueH
+    return () => {
       const children = [
-        h('div', { ref: divRef, hidden: true }),
+        h('div', { props: { ref: divRef, hidden: true } }),
         isLoading.value && h(props.fallback),
         isError.value && h(props.error),
       ].filter(Boolean)
 
-      return h('div', children)
+      return h('div', {}, children)
     }
   }
 })
