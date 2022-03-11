@@ -36,8 +36,12 @@ type _CreateOptions = {
   onFormSubmitted?: (...args: unknown[]) => unknown
 }
 
+function loadHubSpotScript() {
+  return loadScript<HubSpot>("//js-eu1.hsforms.net/forms/shell.js", 'hbspt')
+}
+
 // This will load script only once, even if form is rendered multiple times
-const loadingScript = loadScript<HubSpot>("//js-eu1.hsforms.net/forms/shell.js", 'hbspt')
+let loadingScript = window ? loadHubSpotScript() : undefined
 const noopComponent = defineComponent({
   render: () => h('div', { props: { hidden: true } })
 })
@@ -80,6 +84,10 @@ export default defineComponent({
       divRef.value.hidden = true
       isLoading.value = true
       isError.value = false
+
+      if (!loadingScript) {
+        loadingScript = loadHubSpotScript()
+      }
 
       const hbspt = await loadingScript.catch(error)
 
@@ -129,11 +137,11 @@ export default defineComponent({
 
 function loadScript<Type>(src: string, umdName: string) {
   return new Promise<Type>((resolve, reject) => {
-    const script = document.createElement('script')
+    const script = window.document.createElement('script')
     script.src = src
     script.defer = true
     script.onload = () => resolve((window as any)[umdName] as Type)
     script.onerror = reject
-    document.head.appendChild(script)
+    window.document.head.appendChild(script)
   })
 }
