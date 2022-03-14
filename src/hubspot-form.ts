@@ -41,7 +41,7 @@ function loadHubSpotScript() {
 }
 
 // This will load script only once, even if form is rendered multiple times
-let loadingScript = window ? loadHubSpotScript() : undefined
+let loadingScript = typeof window !== 'undefined' ? loadHubSpotScript() : undefined
 const noopComponent = defineComponent({
   render: () => h('div', { props: { hidden: true } })
 })
