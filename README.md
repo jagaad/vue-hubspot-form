@@ -8,17 +8,33 @@ A Vue wrapper for HubSpot Forms
 npm install @jagaad/vue-hubspot-form
 ```
 
+### Component usage:
+
 ```vue
 <script setup>
-import HubspotForm from "@jagaad/vue-hubspot-form";
+import HubspotForm from '@jagaad/vue-hubspot-form';
 </script>
 <template>
-  <HubspotForm
-    @ready="onReady"
-    :options="options"
-    :fallback="fallback"
-    :error="error"
-  ></HubspotForm>
+	<HubspotForm
+		@ready="onReady"
+		:options="options"
+		:fallback="fallback"
+		:error="error"
+	></HubspotForm>
+</template>
+```
+
+### Hook usage:
+
+```vue
+<script setup>
+import { useHubspotForm } from '@jagaad/vue-hubspot-form';
+const { difRef, isLoading, isError } = useHubspotForm(options, onReady)
+</script>
+<template>
+	<div v-if="!(isLoading || isError)" ref="divRef">
+	<component v-if="isLoading" :is="fallback" />
+	<component v-if="isError" :is="error" />
 </template>
 ```
 
@@ -29,12 +45,12 @@ All examples make use partially of code blocks defined below
 
 ```vue
 <template>
-  <HubspotForm
-    @ready="onReady"
-    :options="options"
-    :fallback="fallback"
-    :error="error"
-  />
+	<HubspotForm
+		@ready="onReady"
+		:options="options"
+		:fallback="fallback"
+		:error="error"
+	/>
 </template>
 ```
 
@@ -45,12 +61,12 @@ All examples make use partially of code blocks defined below
 
 ```vue
 <template>
-  <HubspotForm
-    :onReady="onReady"
-    :options="options"
-    :fallback="fallback"
-    :error="error"
-  />
+	<HubspotForm
+		:onReady="onReady"
+		:options="options"
+		:fallback="fallback"
+		:error="error"
+	/>
 </template>
 ```
 
@@ -60,14 +76,14 @@ All examples make use partially of code blocks defined below
 <summary>Example 3: inject CSS via options</summary>
 
 ```tsx
-import { CreateOptions } from "@jagaad/vue-hubspot-form";
+import { CreateOptions } from '@jagaad/vue-hubspot-form';
 
 // these values are fake, add your own
 const options: CreateOptions = {
-  // ...
-  // Read the official docs for more info
-  cssRequired: `.hubspot-link__container { display: none }`,
-  // ...
+	// ...
+	// Read the official docs for more info
+	cssRequired: `.hubspot-link__container { display: none }`,
+	// ...
 };
 ```
 
@@ -77,13 +93,13 @@ const options: CreateOptions = {
 <summary>Example 4: inject CSS in `onReady` callback</summary>
 
 ```tsx
-import { Payload } from "@jagaad/vue-hubspot-form";
+import { Payload } from '@jagaad/vue-hubspot-form';
 
 function onReady({ iframeDocument: doc }: Payload) {
-  const element = doc.createElement("style");
-  const styles = `.hubspot-link__container { display: none }`;
-  element.appendChild(doc.createTextNode(styles));
-  doc.head.appendChild(element);
+	const element = doc.createElement('style');
+	const styles = `.hubspot-link__container { display: none }`;
+	element.appendChild(doc.createTextNode(styles));
+	doc.head.appendChild(element);
 }
 ```
 
@@ -95,26 +111,26 @@ function onReady({ iframeDocument: doc }: Payload) {
 <summary>Example 5: inject CSS using JSS via options</summary>
 
 ```tsx
-import jss, { Rule } from "jss";
+import jss, { Rule } from 'jss';
 
 jss.use({
-    // this will make JSS to use selectors as names
-    onCreateRule(name, _decl, options) {
-        options.selector = name
-        return null as unknown as Rule
-    }
-})
+	// this will make JSS to use selectors as names
+	onCreateRule(name, _decl, options) {
+		options.selector = name;
+		return null as unknown as Rule;
+	},
+});
 
 const styleSheet = jss.createStyleSheet({
-    '.hubspot-link__container': {
-        display: 'none',
-    },
-})
+	'.hubspot-link__container': {
+		display: 'none',
+	},
+});
 
 const options = {
-    // ...
-    cssRequired: styleSheet.toString()
-}
+	// ...
+	cssRequired: styleSheet.toString(),
+};
 ```
 
 </details>
@@ -125,21 +141,21 @@ const options = {
 **Options:**
 
 ```tsx
-import { CreateOptions } from "@jagaad/vue-hubspot-form";
+import { CreateOptions } from '@jagaad/vue-hubspot-form';
 
 // these values are fake, add your own
 const options: CreateOptions = {
-  region: "eu1",
-  portalId: "83991272",
-  formId: "25f1e214-1236-45c3-810m-d8dk31736c72",
-  // ...
+	region: 'eu1',
+	portalId: '83991272',
+	formId: '25f1e214-1236-45c3-810m-d8dk31736c72',
+	// ...
 };
 ```
 
 **On Ready callback:**
 
 ```tsx
-import { Payload } from "@jagaad/vue-hubspot-form";
+import { Payload } from '@jagaad/vue-hubspot-form';
 
 const onReady = (payload: Payload) => console.log(payload);
 ```
@@ -147,15 +163,15 @@ const onReady = (payload: Payload) => console.log(payload);
 **Fallback Components:**
 
 ```tsx
-import { defineComponent } from "vue";
+import { defineComponent } from 'vue';
 
 // Loading Component
 const fallback = defineComponent({
-  /* ... */
+	/* ... */
 });
 // Error Component
 const error = defineComponent({
-  /* ... */
+	/* ... */
 });
 ```
 
