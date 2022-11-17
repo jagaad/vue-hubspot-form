@@ -14,5 +14,15 @@ export default defineConfig({
 			name: 'HubSpotForm',
 			fileName: (format) => `hubspot-form.${format}.js`,
 		},
+		rollupOptions: {
+			external: ['vue', 'vue-demi'],
+			output: {
+				exports: 'named',
+				globals: {
+					'vue': 'Vue',
+					'vue-demi': 'VueDemi',
+				},
+			},
+		},
 	},
 });
